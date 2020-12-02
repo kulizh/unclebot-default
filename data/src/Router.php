@@ -22,21 +22,21 @@ class Router
 
     public function handle()
     {
-        $request_method = $this->request->getRequestMethod();
+        $request_data = $this->request->getData();
+     	$request_query = $this->request->getQuery();
 
-        switch ($request_method)
+        if (isset($request_data['register']))
 		{
-			case 'register':
-				$this->register();
-			break;
-			case
-				$this->telegramStreamHandle();
-			break;
-			default:
-				Response::error(400);
+			$this->register($request_data['register']);
 		}
-
-		Response::success();
+        elseif ($request_query === 'get')
+		{
+			$this->telegramStreamHandle();
+		}
+        else
+		{
+			Response::error(403);
+		}
     }
 
     private function telegramStreamHandle()
@@ -45,11 +45,14 @@ class Router
 		return $handler->handle();
 	}
 
-    private function register()
+    private function register($register_key)
 	{
-		$params = $this->request->getRequestParams();
+		if (empty($register_key))
+		{
+			Response::error(400);
+		}
 
-		if (empty($params[0]) || ($params[0] !== $this->config->telegram['register_key']))
+		if ($register_key !== $this->config->telegram['register_key'])
 		{
 			Response::error(403);
 		}
