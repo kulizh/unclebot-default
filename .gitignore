@@ -1,0 +1,10 @@
+# log files
+log/
+!log/.gitkeep
+
+# vendor files
+data/vendor
+
+# static files
+data/files/
+!data/files/.gitkeep
