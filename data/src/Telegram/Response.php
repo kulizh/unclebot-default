@@ -29,7 +29,8 @@ class Response
 	{
 		$postfields = $data;
 
-		$url = 'https://api.telegram.org/bot' . Config::TELEGRAM_BOT_TOKEN . self::$method;
+		$config = Config::getInstance();
+		$url = 'https://api.telegram.org/bot' . $config->telegram['bot_token'] . self::$method;
 
 		foreach (self::$recipients as $chat_id)
 		{
@@ -49,7 +50,8 @@ class Response
 		$postfields = $data;
 		$postfields['chat_id'] = $chat_id;
 
-		$url = 'https://api.telegram.org/bot' . Config::TELEGRAM_BOT_TOKEN . $method;
+		$config = Config::getInstance();
+		$url = 'https://api.telegram.org/bot' . $config->telegram['bot_token'] . $method;
 
 		Request::make($url, $postfields);
 	}
