@@ -1,6 +1,9 @@
 # unclebot-default
 Simple framework to create tg-bots.
 
+## Rewrites
+Rewrites now available __only for apache2__, to make it works under nginx use your own .conf.
+
 ## Getting started
 1. Clone repository
 ```bash
