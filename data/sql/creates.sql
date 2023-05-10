@@ -1,11 +1,11 @@
 CREATE TABLE `response_text` (
   `alias` varchar(100) NOT NULL COMMENT 'Alias',
   `text` text CHARACTER SET utf8mb4 NOT NULL COMMENT 'Text',
-  `description` text NOT NULL COMMENT 'Описание'
+  `description` text NOT NULL COMMENT 'Response text description'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `response_text` (`alias`, `text`, `description`) VALUES
-('start', 'Стартуем!', 'Сообщение при команде /start');
+('start', 'Hello there!', 'Message shown when /start command received');
 
 CREATE TABLE `settings` (
   `alias` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Alias',
