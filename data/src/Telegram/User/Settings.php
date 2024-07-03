@@ -57,7 +57,7 @@ class Settings
 				WHERE 
 					users_settings.setting = settings.alias 
 				AND 
-					users_settings.user = 74705134) as value 
+					users_settings.user = ?) as value 
 			FROM 
 				settings 
 		');
