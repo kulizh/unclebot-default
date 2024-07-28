@@ -2,19 +2,20 @@
 namespace Unclebot\Telegram;
 
 use PDO;
+use Unclebot\Utils\Database;
 
 class ResponseText
 {
-	private $db;
+    private PDO $db;
 
-	public function __construct(PDO $db)
-	{
-		$this->db = $db;
-	}
+    public function __construct()
+    {
+        $this->db = Database::connect();
+    }
 
-	public function get(string $alias): string
-	{
-		$query = $this->db->prepare('
+    public function get(string $alias): string
+    {
+        $query = $this->db->prepare('
 			SELECT
 				`text`
 			FROM
@@ -22,8 +23,8 @@ class ResponseText
 			WHERE
 				`alias` = ?
 		');
-		$query->execute(array($alias));
+        $query->execute([$alias]);
 
-		return $query->fetch()['text'];
-	}
+        return $query->fetch()['text'] ?? '';
+    }
 }

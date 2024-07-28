@@ -7,23 +7,22 @@ use \Unclebot\Utils\Cli;
 
 class FileException extends ExceptionAbstract
 {
-	protected $message = 'Ошибка обработки файла';
+    protected $message = 'Ошибка обработки файла';
 
-	protected $type = 'critical';
+    protected $type = 'critical';
 
-	protected $isCli = false;
+    protected $isCli = false;
 
-	public function __construct(string $message = '', int $code = 0, Throwable $previous = null)
-	{
-		parent::__construct($message, $code, $previous);
+    public function __construct(string $message = '', int $code = 0, Throwable $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
 
-		$this->isCli = Cli::verifySAPI();
+        $this->isCli = Cli::verifySAPI();
 
-		if (!$this->isCli)
-		{
-			Response::error(500);
-		}
+        if (!$this->isCli) {
+            Response::error(500);
+        }
 
-		die($message . "\n");
-	}
+        die($message . "\n");
+    }
 }

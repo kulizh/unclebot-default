@@ -3,37 +3,34 @@ namespace Unclebot\Telegram\Models\ReplyMarkup;
 
 class ReplyKeyboard
 {
-	public $oneTime = true;
+    public $oneTime = true;
 
-	public $resize = true;
+    public $resize = true;
 
-	private $replyMarkup = '';
+    private $replyMarkup = '';
 
-	public function __construct(array $buttons)
-	{
-		$keyboards = [];
-		foreach ($buttons as $button) {
-			if (!is_array($button))
-			{
-				$keyboards[] = array($button);
-			}
-			else
-			{
-				$keyboards[] = $button;
-			}
-		}
+    public function __construct(array $buttons)
+    {
+        $keyboards = [];
+        foreach ($buttons as $button) {
+            if (!is_array($button)) {
+                $keyboards[] = array($button);
+            } else {
+                $keyboards[] = $button;
+            }
+        }
 
-		$keyboard = array(
-			'keyboard' => $keyboards,
-			'one_time_keyboard' => $this->oneTime,
-			'resize_keyboard' => $this->resize
-		);
+        $keyboard = array(
+            'keyboard' => $keyboards,
+            'one_time_keyboard' => $this->oneTime,
+            'resize_keyboard' => $this->resize,
+        );
 
-		$this->replyMarkup = json_encode($keyboard);
-	}
+        $this->replyMarkup = json_encode($keyboard);
+    }
 
-	public function getReplyMarkup(): string
-	{
-		return $this->replyMarkup;
-	}
+    public function getReplyMarkup(): string
+    {
+        return $this->replyMarkup;
+    }
 }

@@ -6,36 +6,38 @@ use Unclebot\Utils\Format;
 
 final class Config
 {
-	private static $instance = null;
+    public $db;
+    public $telegram;
 
-	public static function getInstance()
-	{
-		if (is_null(self::$instance))
-		{
-			self::$instance = new self();
-		}
+    private static $instance = null;
 
-		return self::$instance;
-	}
+    public static function getInstance()
+    {
+        if (is_null(self::$instance)) {
+            self::$instance = new self();
+        }
 
-	private function __construct()
-	{
-		$this->parseIniConfigurationFiles();
-	}
+        return self::$instance;
+    }
 
-	private function __clone(){}
+    private function __construct()
+    {
+        $this->parseIniConfigurationFiles();
+    }
 
-	private function parseIniConfigurationFiles()
-	{
-		$config_dir = realpath(dirname(__FILE__) . '/../config/') . '/';
+    private function __clone()
+    {}
 
-		$files = Directory::getFiles($config_dir);
+    private function parseIniConfigurationFiles()
+    {
+        $config_dir = realpath(dirname(__FILE__) . '/../config/') . '/';
 
-		foreach ($files as $file)
-		{
-			$propertyName = Format::snakeCaseToCamelCase(basename($file, '.ini'));
+        $files = Directory::getFiles($config_dir);
 
-			$this->$propertyName = parse_ini_file($config_dir . $file, true);
-		}
-	}
+        foreach ($files as $file) {
+            $propertyName = Format::snakeCaseToCamelCase(basename($file, '.ini'));
+
+            $this->$propertyName = parse_ini_file($config_dir . $file, true);
+        }
+    }
 }

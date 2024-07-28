@@ -3,29 +3,27 @@ namespace Unclebot\Telegram\Models\ReplyMarkup;
 
 class InlineKeyboard
 {
-	private $replyMarkup = '';
+    private $replyMarkup = '';
 
-	public function __construct(array $buttons)
-	{
-		$keyboards = [];
+    public function __construct(array $buttons)
+    {
+        $keyboards = [];
 
-		foreach ($buttons as $button)
-		{
-			$keyboards[] = array(
-				$button
-			);
-		}
+        foreach ($buttons as $button) {
+            $keyboards[] = array(
+                $button,
+            );
+        }
 
+        $keyboard = array(
+            "inline_keyboard" => array($buttons),
+        );
 
-		$keyboard = array(
-			"inline_keyboard" => array($buttons)
-		);
+        $this->replyMarkup = json_encode($keyboard);
+    }
 
-		$this->replyMarkup = json_encode($keyboard);
-	}
-
-	public function getReplyMarkup(): string
-	{
-		return $this->replyMarkup;
-	}
+    public function getReplyMarkup(): string
+    {
+        return $this->replyMarkup;
+    }
 }

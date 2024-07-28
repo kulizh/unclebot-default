@@ -1,58 +1,59 @@
 <?php
 namespace Unclebot\Telegram\User;
 
+use PDO;
+use Unclebot\Utils\Database;
+
 class State
 {
-	private $db;
+    private PDO $db;
+    private string $state;
+    private string $chatID;
 
-	private $state = '';
+    public function __construct(string $chat_id)
+    {
+        $this->db = Database::connect();
+        $this->chatID = $chat_id;
 
-	private $chatID = '';
+        $this->state = $this->getCurrentState();
+    }
 
-	public function __construct(\PDO $db, string $chatID)
-	{
-		$this->db = $db;
-		$this->state = $this->getCurrentState($chatID);
-		$this->chatID = $chatID;
-	}
+    public function get(): string
+    {
+        return $this->state;
+    }
 
-	public function get() : string
-	{
-		return $this->state;
-	}
+    public function set(string $state): bool
+    {
+        if (!$this->stateExists($state)) {
+            return false;
+        }
 
-	public function set(string $state) : bool
-	{
-		if (!$this->stateExists($state))
-		{
-			return false;
-		}
-
-		$query = $this->db->prepare('
+        $query = $this->db->prepare('
 			INSERT INTO users_states
 				(user, state)
-			VALUES 
+			VALUES
 				(?, ?)
 			ON DUPLICATE KEY UPDATE state = ?
 		');
-		$query->execute(array($this->chatID, $state, $state));
+        $query->execute([$this->chatID, $state, $state]);
 
-		return true;
-	}
+        return true;
+    }
 
-	public function clear() : bool 
-	{
-		$query = $this->db->prepare('
+    public function clear(): bool
+    {
+        $query = $this->db->prepare('
 			DELETE FROM users_states
-			WHERE 
+			WHERE
 				user = ?
 		');
-		return $query->execute(array($this->chatID));
-	}
+        return $query->execute([$this->chatID]);
+    }
 
-	private function getCurrentState(string $chat_id) : string
-	{
-		$query = $this->db->prepare('
+    private function getCurrentState(): string
+    {
+        $query = $this->db->prepare('
 			SELECT
 				state
 			FROM
@@ -60,15 +61,15 @@ class State
 			WHERE
 				user = ?
 		');
-		$query->execute(array($chat_id));
-		$fetched = $query->fetch();
+        $query->execute([$this->chatID]);
+        $fetched = $query->fetch();
 
-		return (!empty($fetched['state'])) ? $fetched['state'] : '';
-	}
+        return $fetched['state'] ?? '';
+    }
 
-	private function stateExists(string $alias) : bool
-	{
-		$query = $this->db->prepare('
+    private function stateExists(string $alias): bool
+    {
+        $query = $this->db->prepare('
 			SELECT
 				count(alias)
 			FROM
@@ -76,8 +77,8 @@ class State
 			WHERE
 				alias = ?
 		');
-		$query->execute(array($alias));
+        $query->execute([$alias]);
 
-		return ($query->rowCount() > 0);
-	}
+        return ($query->rowCount() > 0);
+    }
 }

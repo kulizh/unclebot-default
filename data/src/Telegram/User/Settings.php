@@ -1,82 +1,73 @@
 <?php
 namespace Unclebot\Telegram\User;
 
+use PDO;
+use Unclebot\Utils\Database;
+
 class Settings
 {
-	private $db;
+    private PDO $db;
+    private string $chatID;
 
-	private $settings;
+    public function __construct(string $chat_id)
+    {
+        $this->db = Database::connect();
+        $this->chatID = $chat_id;
+    }
 
-	private $chatID;
+    public function set(string $alias, string $value)
+    {
+        if (!$this->settingAvailable($alias)) {
+            return false;
+        }
 
-	public function __construct(\PDO $db, string $chatID)
-	{
-		$this->db = $db;
-		$this->chatID = $chatID;
-
-		$this->settings = $this->getSettings($chatID);
-	}
-
-	public function get()
-	{
-		return $this->settings;
-	}
-
-	public function set(string $alias, $value)
-	{
-		if (!$this->settingExists($alias))
-		{
-			return false;
-		}
-
-		$query = $this->db->prepare('
+        $query = $this->db->prepare('
 			INSERT INTO users_settings
 				(user, setting, value)
-			VALUES 
+			VALUES
 				(?, ?, ?)
 			ON DUPLICATE KEY UPDATE value = ?
 		');
-		$query->execute(array($this->chatID, $alias, $value, $value));
+        $query->execute([$this->chatID, $alias, $value, $value]);
 
-		return true;
-	}
+        return true;
+    }
 
-	private function getSettings(string $chat_id)
-	{
-		$settings = [];
+    public function getAll(): array {
+        return $this->getSettings();
+    }
 
-		$query = $this->db->prepare('
-			SELECT 
-				settings.alias, 
-				settings.title, 
-				settings.default_value, 
-				(SELECT 
-					`value` 
-				FROM 
-					users_settings 
-				WHERE 
-					users_settings.setting = settings.alias 
-				AND 
-					users_settings.user = ?) as value 
-			FROM 
-				settings 
+    private function getSettings()
+    {
+        $settings = [];
+
+        $query = $this->db->prepare('
+            SELECT
+                users_settings.value,
+                settings.default_value,
+                settings.alias
+            FROM
+                users_settings
+                LEFT JOIN users ON users_settings.user = users.chat_id
+                RIGHT JOIN settings ON users_settings.setting = settings.id
+            WHERE
+                users.chat_id = ?
 		');
-		$query->execute(array($chat_id));
+        $query->execute(array($this->chatID));
 
-		while ($row = $query->fetch())
-		{
-			$settings[$row['alias']] = array(
-				'title' => $row['title'],
-				'value' => (!empty($row['value'])) ? $row['value'] : $row['default_value']
-			);
-		}
+        while ($row = $query->fetch()) {
+            $settings[$row['alias']] = array(
+                'title' => $row['title'],
+                'value' => (!empty($row['value'])) ? $row['value'] : $row['default_value'],
+            );
+        }
 
-		return $settings;
-	}
+        return $settings;
+    }
 
-	private function settingExists(string $alias) : bool
-	{
-		$query = $this->db->prepare('
+    private function settingAvailable(string $alias): bool
+    {
+        $query = $this->db->prepare('
 			SELECT
 				count(alias)
 			FROM
@@ -84,8 +75,8 @@ class Settings
 			WHERE
 				alias = ?
 		');
-		$query->execute(array($alias));
+        $query->execute(array($alias));
 
-		return ($query->rowCount() > 0);
-	}
+        return ($query->rowCount() > 0);
+    }
 }

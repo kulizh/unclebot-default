@@ -28,8 +28,7 @@ final class Request
      */
     public static function getInstance()
     {
-        if ( !self::$_instance )
-        {
+        if (!self::$_instance) {
             new self();
         }
 
@@ -100,23 +99,22 @@ final class Request
     }
 
     public function getRequestMethod()
-	{
-		if (!empty($this->queryExploded[0]))
-		{
-			return $this->queryExploded[0];
-		}
+    {
+        if (!empty($this->queryExploded[0])) {
+            return $this->queryExploded[0];
+        }
 
-		return '';
-	}
+        return '';
+    }
 
-	public function getRequestParams()
-	{
-		$query = $this->queryExploded;
+    public function getRequestParams()
+    {
+        $query = $this->queryExploded;
 
-		unset($query[0]);
+        unset($query[0]);
 
-		return array_values($query);
-	}
+        return array_values($query);
+    }
 
     /**
      * Устанавливает значение поля headers
@@ -152,11 +150,9 @@ final class Request
     {
         $this->queryExploded = array($this->query);
 
-        if (stripos($this->query, '/') !== false)
-        {
+        if (stripos($this->query, '/') !== false) {
             $this->queryExploded = explode('/', $this->query);
         }
-
 
         return $this;
     }

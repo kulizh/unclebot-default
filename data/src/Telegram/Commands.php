@@ -1,47 +1,51 @@
 <?php
 namespace Unclebot\Telegram;
 
-use \Unclebot\Utils\Logger;
+use Unclebot\Telegram\Helpers\Gate;
+use Unclebot\Telegram\Helpers\Templator;
+use Unclebot\Telegram\Models\ReplyMarkup\ReplyKeyboard;
 use \Unclebot\Telegram\Models\Text as TelegramText;
-use \Unclebot\Telegram\Models\Image as TelegramImage;
-use \Unclebot\Telegram\Models\ReplyMarkup\ReplyKeyboard;
-use \Unclebot\Telegram\Models\ReplyMarkup\InlineKeyboard;
 
 class Commands
 {
-	private $command;
+    private User $user;
+    private string $command;
+    private ResponseText $responseText;
 
-	private $user;
+    public function __construct(User $user, string $command, ResponseText $responseText)
+    {
+        $this->user = $user;
+        $this->command = ltrim($command, '/');
+        $this->responseText = $responseText;
+    }
 
-	private $responseText;
+    public function getResponseData()
+    {
+        $command = $this->command;
 
-	public function __construct(User $user, string $command, ResponseText $responseText)
-	{
-		$this->user = $user;
-		$this->command = ltrim($command, '/');;
-		$this->responseText = $responseText;
-	}
+        if (Gate::adminArea($command)) {
+            $forbidden = Gate::forbid($this->user);
 
-	public function getResponseData()
-	{
-		$command = $this->command;
+            if (!empty($forbidden)) {
+                return $forbidden;
+            }
+        }
 
-		switch ($command)
-		{
-			default:
-				return array();
-			case 'start':
-				return $this->start();
-		}
-	}
+        switch ($command) {
+            default:
+                return array();
+            case 'start':
+                return $this->start();
+        }
+    }
 
-	private function start()
-	{
-		$text = $this->responseText->get('start');
+    private function start()
+    {
+        $text = $this->responseText->get('start');
 
-		$telegramTextModel = new TelegramText($text);
-		$telegramTextModel->removeKeyboard();
-		
-		return $telegramTextModel->getData();
-	}
+        $telegramTextModel = new TelegramText($text);
+        $telegramTextModel->removeKeyboard();
+
+        return $telegramTextModel->getData();
+    }
 }

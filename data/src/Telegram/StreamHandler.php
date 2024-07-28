@@ -1,95 +1,87 @@
 <?php
 namespace Unclebot\Telegram;
 
-use \Unclebot\Utils\Logger;
+use Unclebot\Utils\Logger;
 
 class StreamHandler
 {
-	private $stream;
+    private $stream;
 
-	private $db;
+    public function __construct()
+    {
+        $this->decodeStream();
+    }
 
-	public function __construct(\PDO $db)
-	{
-		$this->db = $db;
-		$this->decodeStream();
-	}
+    public function handle()
+    {
+        $stream = $this->stream;
 
-	public function handle()
-	{
-		$stream = $this->stream;
+        if (empty($stream['message'])) {
+            return;
+        }
 
-		$chat_id = $stream['message']['from']['id'];
-		$message = $stream['message']['text'];
+        $chat_id = $stream['message']['from']['id'] ?? 0;
 
-		$nickname = $stream['message']['from']['username'] ?? '';
-		$name = $stream['message']['from']['first_name'] ?? '';
+        if (empty($chat_id)) {
+            throw new \Exception('Empty chat_id: ' . json_encode($stream));
+        }
 
-		$user = new User($this->db);
-		$user->register($chat_id, $nickname, $name);
+        $message = $stream['message']['text'];
 
-		$responseText = new ResponseText($this->db);
+        $username = $stream['message']['from']['username'] ?? '';
+        $name = $stream['message']['from']['first_name'] ?? '';
 
-		Response::addChatId($chat_id);
+        $user = new User($chat_id, [
+            'username' => $username,
+            'name' => $name,
+        ]);
 
-		$response_default = array(
-			'text' => $responseText->get('default'),
-		);
+        $responseText = new ResponseText();
 
-		$message = $this->commandAlias($message);
+        Response::addChatId($chat_id);
 
-		if ($message[0] === '/')
-		{
-			$commands = new Commands($user, $message, $responseText);
-			$response = $commands->getResponseData();
-		}
-		else
-		{
-			$stateMachine = new StateMachine($user, $message, $responseText);
-			$response = $stateMachine->handle();
-		}
+        $message = $this->commandAlias($message);
 
-		if (empty($response))
-		{
-			$response = $response_default;
-		}
+        if ($message[0] === '/') {
+            $commands = new Commands($user, $message, $responseText);
+            $response = $commands->getResponseData();
+        } else {
+            $stateMachine = new StateMachine($user, $message, $responseText);
+            $response = $stateMachine->handle();
+        }
 
-		if (!empty($response[0]))
-		{
-			foreach ($response as $item)
-			{
-				if (!empty($item['text']) && !empty($item['timeout']))
-				{
-					Response::send($item['text'], true);
-					sleep($item['timeout']);
-				}
-				else
-				{
-					Response::send($item, true);
-					sleep(1);
-				}
-			}
+        if (empty($response)) {
+            $response = ['text' => $responseText->get('default')];
+        }
 
-			Response::clearRecipients();
-		}
-		else
-		{
-			Response::send($response);
-		}
-	}
+        if (!empty($response[0])) {
+            foreach ($response as $item) {
+                if (!empty($item['text']) && !empty($item['timeout'])) {
+                    Response::send($item['text'], true);
+                    sleep($item['timeout']);
+                } else {
+                    Response::send($item, true);
+                    sleep(1);
+                }
+            }
 
-	private function decodeStream()
-	{
-		$stream_encoded = file_get_contents('php://input');
+            Response::clearRecipients();
+        } else {
+            Response::send($response);
+        }
+    }
 
-		$this->stream = json_decode($stream_encoded, true);
+    private function decodeStream()
+    {
+        $stream_encoded = file_get_contents('php://input');
+        $this->stream = json_decode($stream_encoded, true);
 
-		$logger = new Logger('telegram_input_stream');
-		$logger->write(print_r($this->stream, true));
-	}
+        $logger = new Logger('telegram_input_stream');
+        $logger->write($stream_encoded);
+    }
 
-	private function commandAlias($text)
-	{
-		return $text;
-	}
+    private function commandAlias($text)
+    {
+        return $text;
+    }
 }

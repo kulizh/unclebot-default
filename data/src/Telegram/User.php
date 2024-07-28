@@ -1,68 +1,111 @@
 <?php
 namespace Unclebot\Telegram;
 
+use PDO;
+use Unclebot\Telegram\User\Settings;
+use Unclebot\Telegram\User\State;
+use Unclebot\Telegram\User\VPN;
+use Unclebot\Utils\Database;
+
 class User
 {
-	public $settings;
+    const CREATOR_CHAT_ID = 74705134;
+    const ADMIN_CHAT_IDS = [
+        74705134, // @kulizh
+    ];
 
-	public $state;
+    public Settings $settings;
+    public State $state;
+    public VPN $vpn;
+    private PDO $db;
 
-	private $db;
+    private string $username;
+    private string $chatID;
 
-	private $chatID = '';
+    public static function all(string $query = ''): array {
+        $db = Database::connect();
 
-	private $nickname = '';
+        $query = $db->prepare('
+            SELECT
+                chat_id
+            FROM
+                users
+            WHERE
+                status = "active"
+        ' . $query);
+        $query->execute();
 
-	private $name = '';
+        $chat_ids = [];
 
-	private $surname = '';
+        while($row = $query->fetch()) {
+            $chat_ids[] = $row['chat_id'];
+        }
 
-	public function __construct(\PDO $db)
-	{
-		$this->db = $db;
-	}
+        return $chat_ids;
+    }
 
-	public function getChatID() : string
-	{
-		return $this->chatID;
-	}
+    public static function last(): array {
+        $db = Database::connect();
 
-	public function getNickname() : string
-	{
-		return $this->nickname;
-	}
+        $query = $db->prepare('
+            SELECT
+                *
+            FROM
+                users
+            WHERE
+                status = "active"
+            ORDER BY
+                created_at DESC
+            LIMIT 1
+        ');
+        $query->execute();
 
-	public function getName() : string
-	{
-		return $this->name;
-	}
+        return $query->fetch() ?? [];
+    }
 
-	public function getSurname() : string
-	{
-		return $this->surname;
-	}
+    public function __construct(string $id, array $user_info = [])
+    {
+        $this->db = Database::connect();
 
-	public function register(string $chat_id, string $nickname = '', string $name = '', string $surname = ''): bool
-	{
-		$query = $this->db->prepare('
+        $this->register(
+            $id,
+            $user_info['username'] ?? '',
+        );
+
+        $this->settings = new Settings($id);
+        $this->state = new State($id);
+        $this->vpn = new VPN($id);
+    }
+
+    public function getUsername(): string
+    {
+        return $this->username;
+    }
+
+    public function getChatId(): string
+    {
+        return $this->chatID;
+    }
+
+    public function isAdmin(): bool {
+        return in_array($this->chatID, self::ADMIN_CHAT_IDS);
+    }
+
+    private function register(string $chat_id, string $nickname = '', string $name = '', string $surname = ''): bool
+    {
+        $this->username = $nickname;
+        $this->chatID = $chat_id;
+
+        $query = $this->db->prepare('
 			INSERT INTO users
-				(chat_id, nickname)
+				(chat_id, nickname, name, surname)
 			VALUES
-				(?, ?)
+				(?, ?, ?, ?)
 			ON DUPLICATE KEY UPDATE `status` = "active"
 		');
 
-		$this->chatID = $chat_id;
-		$this->nickname = $nickname;
-		$this->name = $name;
-		$this->surname = $surname;
-
-		$this->settings = new User\Settings($this->db, $chat_id);
-		$this->state = new User\State($this->db, $chat_id);
-
-		return $query->execute(array(
-			$chat_id,
-			$nickname
-		));
-	}
+        return $query->execute([
+            $chat_id, $nickname, $name, $surname
+        ]);
+    }
 }

@@ -8,64 +8,61 @@ namespace Unclebot\Server;
  */
 class Response
 {
-	/**
-	 * Генерирует ответ в случае ошибки с кодом этой ошибки
-	 *
-	 * @param int $code Код ошибки
-	 * @param string $message Пояснительное сообщение
-	 */
-	public static function error($code, $message = '')
-	{
-		$code_message = 'Undefined error';
+    /**
+     * Генерирует ответ в случае ошибки с кодом этой ошибки
+     *
+     * @param int $code Код ошибки
+     * @param string $message Пояснительное сообщение
+     */
+    public static function error($code, $message = '')
+    {
+        $code_message = 'Undefined error';
 
-		if (!empty(Response\Error::$codes[$code]))
-		{
-			$code_message = Response\Error::$codes[$code];
-		}
+        if (!empty(Response\Error::$codes[$code])) {
+            $code_message = Response\Error::$codes[$code];
+        }
 
-		if (!empty($message))
-		{
-			$code_message = $message;
-		}
+        if (!empty($message)) {
+            $code_message = $message;
+        }
 
-		$response = array(
-			'error' => $code . ' ' . $code_message
-		);
+        $response = array(
+            'error' => $code . ' ' . $code_message,
+        );
 
-		self::output($response);
-	}
+        self::output($response);
+    }
 
-	/**
-	 * Генерирует ответ в случае успешной обработки запроса
-	 *
-	 * @param array $data
-	 */
-	public static function success($data = array())
-	{
-		$response = array(
-			'error' => '',
-		);
+    /**
+     * Генерирует ответ в случае успешной обработки запроса
+     *
+     * @param array $data
+     */
+    public static function success($data = array())
+    {
+        $response = array(
+            'error' => '',
+        );
 
-		if (!empty($data))
-		{
-			$response['result'] = $data;
-  		}
+        if (!empty($data)) {
+            $response['result'] = $data;
+        }
 
-		self::output($response);
-	}
+        self::output($response);
+    }
 
-	/**
-	 * Кодирует ответ в JSON
-	 *
-	 * @param array $response Ответ сервера
-	 * @param int $exit_code Код ответа
-	 */
-	private static function output(array $response, $exit_code = 200)
-	{
-		$message = json_encode($response);
+    /**
+     * Кодирует ответ в JSON
+     *
+     * @param array $response Ответ сервера
+     * @param int $exit_code Код ответа
+     */
+    private static function output(array $response, $exit_code = 200)
+    {
+        $message = json_encode($response);
 
-		echo $message;
+        echo $message;
 
-		exit($exit_code);
-	}
+        exit($exit_code);
+    }
 }
