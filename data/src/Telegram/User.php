@@ -4,7 +4,6 @@ namespace Unclebot\Telegram;
 use PDO;
 use Unclebot\Telegram\User\Settings;
 use Unclebot\Telegram\User\State;
-use Unclebot\Telegram\User\VPN;
 use Unclebot\Utils\Database;
 
 class User
@@ -16,7 +15,6 @@ class User
 
     public Settings $settings;
     public State $state;
-    public VPN $vpn;
     private PDO $db;
 
     private string $username;
@@ -74,7 +72,6 @@ class User
 
         $this->settings = new Settings($id);
         $this->state = new State($id);
-        $this->vpn = new VPN($id);
     }
 
     public function getUsername(): string
